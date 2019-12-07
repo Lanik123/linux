@@ -16,6 +16,7 @@
 #include <linux/device.h>
 #include <linux/dma-direct.h>
 #include <linux/dma-map-ops.h>
+#include <linux/dma-mapping.h>
 #include <linux/highmem.h>
 #include <linux/memblock.h>
 #include <linux/slab.h>
@@ -2266,7 +2267,7 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
 	const struct dma_map_ops *dma_ops;
 
 	dev->archdata.dma_coherent = coherent;
-#ifdef CONFIG_SWIOTLB
+#if defined(CONFIG_SWIOTLB) || defined(CONFIG_IOMMU_DMA)
 	dev->dma_coherent = coherent;
 #endif
 
@@ -2278,12 +2279,17 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
 	if (dev->dma_ops)
 		return;
 
-	if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
-		dma_ops = arm_get_iommu_dma_map_ops(coherent);
-	else
-		dma_ops = arm_get_dma_map_ops(coherent);
+	if (iommu)
+		iommu_setup_dma_ops(dev, dma_base, size);
 
-	set_dma_ops(dev, dma_ops);
+	if (!dev->dma_ops) {
+		if (arm_setup_iommu_dma_ops(dev, dma_base, size, iommu))
+			dma_ops = arm_get_iommu_dma_map_ops(coherent);
+		else
+			dma_ops = arm_get_dma_map_ops(coherent);
+
+		set_dma_ops(dev, dma_ops);
+	}
 
 #ifdef CONFIG_XEN
 	if (xen_initial_domain())
@@ -2302,7 +2308,14 @@ void arch_teardown_dma_ops(struct device *dev)
 	set_dma_ops(dev, NULL);
 }
 
-#ifdef CONFIG_SWIOTLB
+#ifdef CONFIG_IOMMU_DMA
+void arch_dma_prep_coherent(struct page *page, size_t size)
+{
+	__dma_clear_buffer(page, size, NORMAL);
+}
+#endif
+
+#if defined(CONFIG_SWIOTLB) || defined(CONFIG_IOMMU_DMA)
 void arch_sync_dma_for_device(phys_addr_t paddr, size_t size,
 		enum dma_data_direction dir)
 {
