@@ -6,6 +6,7 @@
  * Copyright (C) 2017 Red Hat
  */
 
+#include <linux/adreno-smmu-priv.h>
 #include <linux/atomic.h>
 #include <linux/bitfield.h>
 #include <linux/clk.h>
@@ -72,6 +73,7 @@ struct qcom_iommu_domain {
 	struct iommu_domain	 domain;
 	struct qcom_iommu_dev	*iommu;
 	struct iommu_fwspec	*fwspec;
+	bool			is_gpu;
 };
 
 static struct qcom_iommu_domain *to_qcom_iommu_domain(struct iommu_domain *dom)
@@ -207,6 +209,7 @@ static const struct iommu_flush_ops qcom_flush_ops = {
 static irqreturn_t qcom_iommu_fault(int irq, void *dev)
 {
 	struct qcom_iommu_ctx *ctx = dev;
+	struct qcom_iommu_domain *qcom_domain = to_qcom_iommu_domain(ctx->domain);
 	u32 fsr, fsynr;
 	u64 iova;
 
@@ -226,7 +229,8 @@ static irqreturn_t qcom_iommu_fault(int irq, void *dev)
 	}
 
 	iommu_writel(ctx, ARM_SMMU_CB_FSR, fsr);
-	iommu_writel(ctx, ARM_SMMU_CB_RESUME, ARM_SMMU_RESUME_TERMINATE);
+	if (!qcom_domain->is_gpu)
+		iommu_writel(ctx, ARM_SMMU_CB_RESUME, ARM_SMMU_RESUME_TERMINATE);
 
 	return IRQ_HANDLED;
 }
@@ -246,6 +250,106 @@ static void qcom_iommu_reset_ctx(struct qcom_iommu_ctx *ctx)
 
 	/* Should we issue a TLBSYNC there instead? */
 	wmb();
+}
+
+static void qcom_adreno_iommu_get_fault_info(const void *cookie,
+		struct adreno_smmu_fault_info *info)
+{
+	struct qcom_iommu_ctx *ctx = (void *)cookie;
+	struct qcom_iommu_domain *qcom_domain = to_qcom_iommu_domain(ctx->domain);
+
+	pm_runtime_get_sync(qcom_domain->iommu->dev);
+	info->fsr = iommu_readl(ctx, ARM_SMMU_CB_FSR);
+	info->fsynr0 = iommu_readl(ctx, ARM_SMMU_CB_FSYNR0);
+	info->fsynr1 = iommu_readl(ctx, ARM_SMMU_CB_FSYNR1);
+	info->far = iommu_readq(ctx, ARM_SMMU_CB_FAR);
+	info->cbfrsynra = 0;
+	info->ttbr0 = iommu_readq(ctx, ARM_SMMU_CB_TTBR0);
+	info->contextidr = iommu_readl(ctx, ARM_SMMU_CB_CONTEXTIDR);
+	pm_runtime_put_autosuspend(qcom_domain->iommu->dev);
+}
+
+static void qcom_adreno_iommu_set_stall(const void *cookie, bool enabled)
+{
+	struct qcom_iommu_ctx *ctx = (void *)cookie;
+	struct qcom_iommu_domain *qcom_domain = to_qcom_iommu_domain(ctx->domain);
+	u32 reg;
+
+	pm_runtime_get_sync(qcom_domain->iommu->dev);
+	reg = iommu_readl(ctx, ARM_SMMU_CB_SCTLR);
+
+	if (enabled)
+		reg |= ARM_SMMU_SCTLR_CFCFG;
+
+	iommu_writel(ctx, ARM_SMMU_CB_SCTLR, reg & ~ARM_SMMU_SCTLR_CFCFG);
+	pm_runtime_put_autosuspend(qcom_domain->iommu->dev);
+}
+
+static void qcom_adreno_iommu_resume_translation(const void *cookie, bool terminate)
+{
+	struct qcom_iommu_ctx *ctx = (void *)cookie;
+	struct qcom_iommu_domain *qcom_domain = to_qcom_iommu_domain(ctx->domain);
+	u32 reg = terminate ? ARM_SMMU_RESUME_TERMINATE : 0;
+
+	pm_runtime_get_sync(qcom_domain->iommu->dev);
+	iommu_writel(ctx, ARM_SMMU_CB_RESUME, reg);
+	pm_runtime_put_autosuspend(qcom_domain->iommu->dev);
+}
+
+static const struct io_pgtable_cfg *qcom_adreno_iommu_get_ttbr1_cfg(
+		const void *cookie)
+{
+	struct qcom_iommu_ctx *ctx = (void *)cookie;
+	struct qcom_iommu_domain *qcom_domain = to_qcom_iommu_domain(ctx->domain);
+	struct io_pgtable *pgtable =
+		io_pgtable_ops_to_pgtable(qcom_domain->pgtbl_ops);
+	return &pgtable->cfg;
+}
+
+/*
+ * Local implementation to configure TTBR0 with the specified pagetable config.
+ * The GPU driver will call this to reset TTBR0 with global PT.
+ */
+
+static int qcom_adreno_iommu_set_ttbr0_cfg(const void *cookie,
+		const struct io_pgtable_cfg *pgtbl_cfg)
+{
+	struct qcom_iommu_ctx *ctx = (void *)cookie;
+	struct qcom_iommu_domain *qcom_domain = to_qcom_iommu_domain(ctx->domain);
+
+	/* The domain must have split pagetables already enabled */
+	if (!pgtbl_cfg) {
+		struct io_pgtable *pgtable =
+			io_pgtable_ops_to_pgtable(qcom_domain->pgtbl_ops);
+		pgtbl_cfg = &pgtable->cfg;
+	}
+
+	pm_runtime_get_sync(qcom_domain->iommu->dev);
+	iommu_writeq(ctx, ARM_SMMU_CB_TTBR0,
+			pgtbl_cfg->arm_lpae_s1_cfg.ttbr |
+			FIELD_PREP(ARM_SMMU_TTBRn_ASID, ctx->asid));
+	pm_runtime_put_autosuspend(qcom_domain->iommu->dev);
+
+	return 0;
+}
+
+static void qcom_iommu_setup_adreno(struct qcom_iommu_domain *qcom_domain, struct device *dev)
+{
+	struct adreno_smmu_priv *priv;
+
+	//smmu_domain->cfg.flush_walk_prefer_tlbiasid = true;
+
+	/*
+	 * Initialize private interface with GPU:
+	 */
+
+	priv = dev_get_drvdata(dev);
+	priv->cookie = to_ctx(qcom_domain, qcom_domain->fwspec->ids[0]);
+	priv->get_ttbr1_cfg = qcom_adreno_iommu_get_ttbr1_cfg;
+	priv->set_ttbr0_cfg = qcom_adreno_iommu_set_ttbr0_cfg;
+	priv->get_fault_info = qcom_adreno_iommu_get_fault_info;
+	priv->set_stall = qcom_adreno_iommu_set_stall;
+	priv->resume_translation = qcom_adreno_iommu_resume_translation;
 }
 
 static int qcom_iommu_init_domain(struct iommu_domain *domain,
@@ -273,6 +377,9 @@ static int qcom_iommu_init_domain(struct iommu_domain *domain,
 		ias = 32;
 		oas = 40;
 	}
+
+	if (of_device_is_compatible(dev->of_node, "qcom,adreno"))
+		qcom_domain->is_gpu = true;
 
 	pgtbl_cfg = (struct io_pgtable_cfg) {
 		.pgsize_bitmap	= qcom_iommu_ops.pgsize_bitmap,
@@ -356,6 +463,9 @@ static int qcom_iommu_init_domain(struct iommu_domain *domain,
 		      ARM_SMMU_SCTLR_M | ARM_SMMU_SCTLR_S1_ASIDPNE |
 		      ARM_SMMU_SCTLR_CFCFG;
 
+		if (qcom_domain->is_gpu)
+			reg |= ARM_SMMU_SCTLR_HUPCF;
+
 		if (IS_ENABLED(CONFIG_CPU_BIG_ENDIAN))
 			reg |= ARM_SMMU_SCTLR_E;
 
@@ -368,6 +478,9 @@ static int qcom_iommu_init_domain(struct iommu_domain *domain,
 
 	/* Publish page table ops for map/unmap */
 	qcom_domain->pgtbl_ops = pgtbl_ops;
+
+	if (qcom_domain->is_gpu)
+		qcom_iommu_setup_adreno(qcom_domain, dev);
 
 	return 0;
 
