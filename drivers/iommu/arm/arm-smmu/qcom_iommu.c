@@ -173,16 +173,18 @@ static void qcom_iommu_tlb_inv_range_nosync(unsigned long iova, size_t size,
 		size_t s = size;
 
 		if (qcom_iommu->use_aarch64_pt) {
-			iova >>= 12;
-			iova |= (unsigned long)ctx->asid << 48;
+			u64 regval = (iova >> 12) | (((unsigned long) ctx->asid) << 48);
+			do {
+				iommu_writeq(ctx, reg, regval);
+				regval += granule >> 12;
+			} while (s -= granule);
 		} else {
-			iova &= (1UL << 12) - 1UL;
-			iova |= ctx->asid;
+			u32 regval = ((iova >> 12) << 12) | ctx->asid;
+			do {
+				iommu_writel(ctx, reg, regval);
+				regval += granule;
+			} while (s -= granule);
 		}
-		do {
-			iommu_writel(ctx, reg, iova);
-			iova += granule;
-		} while (s -= granule);
 	}
 }
 
