@@ -962,6 +962,57 @@
 			compatible = "qcom,tcsr-msm8937", "syscon";
 			reg = <0x01937000 0x30000>;
 		};
+
+		apps_iommu: iommu@1e00000 {
+			compatible = "qcom,msm8937-iommu", "qcom,msm-iommu-v1";
+
+			clocks = <&gcc GCC_SMMU_CFG_CLK>,
+				 <&gcc GCC_APSS_TCU_CLK>;
+			clock-names = "iface", "bus";
+
+			qcom,iommu-secure-id = <17>;
+
+			ranges  = <0 0x1e20000 0x20000>;
+
+			#address-cells = <1>;
+			#size-cells = <1>;
+			#iommu-cells = <1>;
+
+			iommu-ctx@15000 { // mdp_0
+				compatible = "qcom,msm-iommu-v1-ns";
+				reg = <0x15000 0x1000>;
+				interrupts = <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
+			};
+
+			iommu-ctx@16000 { // venus_ns
+				compatible = "qcom,msm-iommu-v1-ns";
+				reg = <0x16000 0x1000>;
+				interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>;
+			};
+		};
+
+		gpu_iommu: iommu@1f08000 {
+			compatible = "qcom,msm8937-gpu-iommu", "qcom,msm-iommu-v1";
+
+			clocks = <&gcc GCC_OXILI_AHB_CLK>,
+			    	 <&gcc GCC_BIMC_GFX_CLK>;
+			clock-names = "iface", "bus";
+
+			qcom,use-aarch64-pagetables;
+			power-domains = <&gcc OXILI_CX_GDSC>;
+
+			ranges = <0 0x01c48000 0x8000>;
+
+			#address-cells = <1>;
+			#size-cells = <1>;
+			#iommu-cells = <1>;
+
+			iommu-ctx@0000 { // gfx3d_user
+				compatible = "qcom,msm-iommu-v1-ns";
+				reg = <0x0000 0x1000>;
+				interrupts = <GIC_SPI 225 IRQ_TYPE_LEVEL_HIGH>;
+			};
+		};
 		
 		mdss: mdss@1a00000 {
 			compatible = "qcom,mdss";
@@ -1178,6 +1229,8 @@
 						<&bimc MAS_APPS_PROC &pcnoc SLV_DISP_SS_CFG>;
 				interconnect-names = "mdp0-mem", "cpu-cfg";
 
+				iommus = <&apps_iommu 0x15>;
+
 				ports {
 					#address-cells = <1>;
 					#size-cells = <0>;
@@ -1224,6 +1277,8 @@
 			#cooling-cells = <2>;
 			interconnects = <&bimc MAS_OXILI &bimc SLV_EBI>;
 			interconnect-names = "gfx-mem";
+
+			iommus = <&gpu_iommu 0>;
 
 			gpu_opp_table: opp-table {
 				compatible  ="operating-points-v2";
@@ -1583,6 +1638,8 @@
 			interconnect-names = "video-mem", "cpu-cfg";
 
 			memory-region = <&venus_mem>;
+
+			iommus = <&apps_iommu 0x16>;
 
 			video-decoder {
 				compatible = "venus-decoder";
