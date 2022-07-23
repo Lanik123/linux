@@ -411,10 +411,12 @@ static int qcom_iommu_init_domain(struct iommu_domain *domain,
 		u32 tcr[2];
 
 		if (!ctx->secure_init) {
-			ret = qcom_scm_restore_sec_cfg(qcom_iommu->sec_id, ctx->asid);
-			if (ret) {
-				dev_err(qcom_iommu->dev, "secure init failed: %d\n", ret);
-				goto out_clear_iommu;
+			if (qcom_iommu->sec_id > 0) {
+				ret = qcom_scm_restore_sec_cfg(qcom_iommu->sec_id, ctx->asid);
+				if (ret) {
+					dev_err(qcom_iommu->dev, "secure init failed: %d\n", ret);
+					goto out_clear_iommu;
+				}
 			}
 			ctx->secure_init = true;
 		}
@@ -431,7 +433,7 @@ static int qcom_iommu_init_domain(struct iommu_domain *domain,
 		tcr[0] = arm_smmu_lpae_tcr(&pgtbl_cfg);
 		tcr[1] = arm_smmu_lpae_tcr2(&pgtbl_cfg);
 
-		if (!qcom_iommu->use_aarch64_pt) {
+		if (!qcom_iommu->use_aarch64_pt || qcom_iommu->sec_id < 0) {
 			tcr[0] |= ARM_SMMU_TCR_EAE;
 		} else {
 			/* This shall not fail, or spectacular things happen! */
@@ -1020,8 +1022,8 @@ static int qcom_iommu_device_probe(struct platform_device *pdev)
 
 	if (of_property_read_u32(dev->of_node, "qcom,iommu-secure-id",
 				 &qcom_iommu->sec_id)) {
+		qcom_iommu->sec_id = -1;
 		dev_err(dev, "missing qcom,iommu-secure-id property\n");
-		return -ENODEV;
 	}
 
 	if (of_property_read_bool(dev->of_node, "qcom,use-aarch64-pagetables"))
@@ -1112,7 +1114,7 @@ static int __maybe_unused qcom_iommu_resume(struct device *dev)
 	if (ret < 0)
 		return ret;
 
-	if (dev->pm_domain)
+	if (dev->pm_domain && qcom_iommu->sec_id > 0)
 		return qcom_scm_restore_sec_cfg(qcom_iommu->sec_id, 0);
 
 	return ret;

@@ -998,7 +998,6 @@
 			    	 <&gcc GCC_BIMC_GFX_CLK>;
 			clock-names = "iface", "bus";
 
-			qcom,use-aarch64-pagetables;
 			power-domains = <&gcc OXILI_CX_GDSC>;
 
 			ranges = <0 0x01c48000 0x8000>;
