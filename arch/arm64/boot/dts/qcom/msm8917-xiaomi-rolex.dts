@@ -1,0 +1,383 @@
+/dts-v1/;
+
+#include "msm8917-pm8937.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/leds/common.h>
+#include <dt-bindings/pinctrl/qcom,pmic-mpp.h>
+#include <dt-bindings/power/summit,smb347-charger.h>
+
+/ {
+	model = "Xiaomi Redmi 4A (rolex)";
+	compatible = "xiaomi,rolex", "qcom,msm8917";
+	chassis-type = "handset";
+
+	qcom,board-id= <0x1000b 1>, <0x2000b 1>;
+	qcom,pmic-id = <0x10019 0x0 0x0 0x0>;
+
+	aliases {
+		panel = &panel;
+		mmc0 = &sdhc_1; /* eMMC */
+		mmc1 = &sdhc_2; /* SD card */
+	};
+
+	reserved-memory {
+		/delete-node/other_ext_region@85b00000;
+
+		other_ext_region@84A00000 {
+			no-map;
+			reg = <0x0 0x84A00000 0x0 0x1E00000>;
+		};
+
+		ramoops@b0000000 {
+			compatible = "ramoops";
+			reg = <0 0xb0000000 0 0x400000>;
+			record-size = <0x200000>;
+			console-size = <0x200000>;
+		};
+	};
+
+	bat: battery {
+		compatible = "simple-battery";
+		charge-full-design-microamp-hours = <3030000>;
+		voltage-max-design-microvolt = <4400000>;
+		voltage-min-design-microvolt = <3400000>;
+		constant-charge-current-max-microamp = <1800000>;
+		operating-range-celsius = <0 45>;
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_key_default>;
+
+		label = "GPIO Button";
+
+		volume-up {
+			label = "Volume Up";
+			gpios = <&msmgpio 91 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_VOLUMEUP>;
+		};
+	};
+
+	vibrator {
+		compatible = "gpio-vibrator";
+		enable-gpios = <&msmgpio 97 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+&blsp_i2c2 {
+	status = "okay";
+	led-controller@45 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		compatible = "awinic,aw2013";
+
+		reg = <0x45>;
+
+		vcc-supply = <&pm8937_l10>;
+
+		led@0 {
+			reg = <0>;
+			led-max-microamp = <5000>;
+			function = LED_FUNCTION_INDICATOR;
+			color = <LED_COLOR_ID_RED>;
+		};
+		led@1 {
+			reg = <1>;
+			led-max-microamp = <5000>;
+			function = LED_FUNCTION_INDICATOR;
+			color = <LED_COLOR_ID_GREEN>;
+		};
+		led@2 {
+			reg = <2>;
+			led-max-microamp = <5000>;
+			function = LED_FUNCTION_INDICATOR;
+			color = <LED_COLOR_ID_BLUE>;
+		};
+	};
+
+	regulator@3e {
+		compatible = "ti,tps65132";
+		reg = <0x3e>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&reg_lcd_en_default>;
+
+		reg_lcd_pos: outp {
+			regulator-name = "outp";
+			regulator-min-microvolt = <5400000>;
+			regulator-max-microvolt = <5400000>;
+			enable-gpios = <&msmgpio 126 GPIO_ACTIVE_HIGH>;
+			regulator-active-discharge = <1>;
+		};
+
+		reg_lcd_neg: outn {
+			regulator-name = "outn";
+			regulator-min-microvolt = <5400000>;
+			regulator-max-microvolt = <5400000>;
+			enable-gpios = <&msmgpio 127 GPIO_ACTIVE_HIGH>;
+			regulator-active-discharge = <1>;
+		};
+	};
+};
+
+&blsp_i2c3 {
+	status = "okay";
+	touchscreen@38 {
+		compatible = "edt,edt-ft5306", "edt,edt-ft5x06";
+		reg = <0x38>;
+		vcc-supply = <&pm8937_l10>;
+		iovcc-supply = <&pm8937_l5>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&ts_int_active &ts_reset_active>;
+		interrupt-parent = <&msmgpio>;
+		interrupts = <65 0x2008>;
+		reset-gpios = <&msmgpio 64 GPIO_ACTIVE_LOW>;
+		touchscreen-size-x = <720>;
+		touchscreen-size-y = <1280>;
+	};
+};
+
+&blsp_i2c5 {
+	status = "okay";
+	power_supply: charger@57 {
+		compatible = "summit,smb358";
+		reg = <0x57>;
+
+		summit,enable-charge-control = <SMB3XX_CHG_ENABLE_PIN_ACTIVE_HIGH>;
+		summit,soft-compensation-method = <SMB3XX_SOFT_TEMP_COMPENSATE_CURRENT>;
+		summit,chip-temperature-threshold-celsius = <100>;
+		summit,enable-usb-charging;
+		summit,enable-apsd;
+
+		monitored-battery = <&bat>;
+
+		usb_vbus: usb-vbus {
+			regulator-name = "usb_vbus";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			regulator-min-microamp = <750000>;
+			regulator-max-microamp = <750000>;
+		};
+	};
+
+	cw2015@62 {
+		compatible = "cellwise,cw2015";
+		reg = <0x62>;
+		cellwise,battery-profile = /bits/ 8 <
+			0x18 0x03 0x6A 0x6B 0x6D 0x6A 0x68 0x65
+			0x60 0x63 0x60 0x54 0x5D 0x59 0x48 0x40
+			0x38 0x31 0x27 0x24 0x28 0x31 0x43 0x4D
+			0x28 0x49 0x0B 0x85 0x1C 0x37 0x57 0x6E
+			0x79 0x7A 0x7A 0x7A 0x3D 0x1A 0x62 0x3F
+			0x0A 0x44 0x34 0x55 0x82 0x97 0x9B 0x13
+			0x41 0x81 0x94 0xC2 0x74 0x9C 0xBC 0xCB
+			0x2F 0x7D 0x72 0xA5 0xB5 0xC1 0x95 0x61
+		>;
+		cellwise,monitor-interval-ms = <1000>;
+		monitored-battery = <&bat>;
+		power-supplies = <&power_supply>;
+	};
+};
+
+&dsi0 {
+	panel: panel@0 {
+		compatible = "mdss,nt35521s-ebbg";
+		reg = <0>;
+		
+		supply-names = "vsp", "vsn";
+		vsp-supply = <&reg_lcd_pos>;
+		vsn-supply = <&reg_lcd_neg>;
+
+		reset-gpios = <&msmgpio 60 GPIO_ACTIVE_LOW>;
+		
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&mdss_dsi_active>;
+		pinctrl-1 = <&mdss_dsi_suspend>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&dsi0_out>;
+			};
+		};
+	};
+};
+
+&dsi0_out {
+	data-lanes = <0 1 2>;
+	remote-endpoint = <&panel_in>;
+};
+
+&dsi_phy0 {
+	qcom,dsi-phy-regulator-ldo-mode;
+};
+
+&sdhc_1 {
+	status = "okay";
+
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&sdc1_clk_on &sdc1_cmd_on &sdc1_data_on &sdc1_rclk_on>;
+	pinctrl-1 = <&sdc1_clk_off &sdc1_cmd_off &sdc1_data_off &sdc1_rclk_off>;
+};
+
+&sdhc_2 {
+	status = "okay";
+
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&sdc2_clk_on &sdc2_cmd_on &sdc2_data_on &sdc2_cd_on>;
+	pinctrl-1 = <&sdc2_clk_off &sdc2_cmd_off &sdc2_data_off &sdc2_cd_off>;
+
+	cd-gpios = <&msmgpio 67 GPIO_ACTIVE_LOW>;
+};
+
+&pm8937_resin {
+	status = "okay";
+	linux,code = <KEY_VOLUMEDOWN>;
+};
+
+&pm8937_gpios {
+	pwm_out: gpio8 {
+		pins = "gpio8";
+		function = "dtest2";
+		output-low;
+		bias-disable;
+		qcom,drive-strength = <2>;
+		status = "okay";
+	};
+};
+
+&msmgpio {
+	ts_reset_active: ts-reset-active-pins {
+		pins = "gpio64";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	ts_reset_suspend: ts-reset-suspend-pins {
+		pins = "gpio64";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+	
+	ts_int_active: ts-int-active-pins {
+		pins = "gpio65";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	ts_int_suspend: ts-int-suspend-pins {
+		pins = "gpio65";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+
+	reg_lcd_en_default: reg_lcd_en_default {
+		pins = "gpio126", "gpio127";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+};
+
+&smd_rpm_regulators {
+	s1 {
+		regulator-min-microvolt = <1000000>;
+		regulator-max-microvolt = <1225000>;
+	};
+	s3 {
+		regulator-min-microvolt = <1300000>;
+		regulator-max-microvolt = <1300000>;
+	};
+	s4 {
+		regulator-min-microvolt = <2050000>;
+		regulator-max-microvolt = <2050000>;
+	};
+	l2 {
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+	};
+	l5 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-always-on;
+	};
+	l6 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-always-on;
+	};
+	l7 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+	};
+	l8 {
+		regulator-min-microvolt = <2850000>;
+		regulator-max-microvolt = <2900000>;
+	};
+	l9 {
+		regulator-min-microvolt = <3000000>;
+		regulator-max-microvolt = <3300000>;
+	};
+	l10 {
+		regulator-min-microvolt = <2800000>;
+		regulator-max-microvolt = <3000000>;
+	};
+	l11 {
+		regulator-min-microvolt = <2950000>;
+		regulator-max-microvolt = <2950000>;
+	};
+	l12 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <2950000>;
+	};
+	l13 {
+		regulator-min-microvolt = <3075000>;
+		regulator-max-microvolt = <3075000>;
+	};
+	l14 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+	};
+	l15 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+	};
+	l16 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+	};
+	l17 {
+		regulator-min-microvolt = <2800000>;
+		regulator-max-microvolt = <2900000>;
+	};
+	l19 {
+		regulator-min-microvolt = <1225000>;
+		regulator-max-microvolt = <1350000>;
+	};
+	l20 {
+		regulator-min-microvolt = <1740000>;
+		regulator-max-microvolt = <1740000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+	l21 {
+		regulator-min-microvolt = <1740000>;
+		regulator-max-microvolt = <1740000>;
+		regulator-boot-on;
+		regulator-always-on;
+	};
+	l22 {
+		regulator-min-microvolt = <2800000>;
+		regulator-max-microvolt = <2800000>;
+	};
+	l23 {
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+	};
+};
