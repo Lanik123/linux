@@ -239,7 +239,7 @@ static int nt35521s_ebbg_probe(struct mipi_dsi_device *dsi)
 	return 0;
 }
 
-static int nt35521s_ebbg_remove(struct mipi_dsi_device *dsi)
+static void nt35521s_ebbg_remove(struct mipi_dsi_device *dsi)
 {
 	struct nt35521s_ebbg *ctx = mipi_dsi_get_drvdata(dsi);
 	int ret;
@@ -249,8 +249,6 @@ static int nt35521s_ebbg_remove(struct mipi_dsi_device *dsi)
 		dev_err(&dsi->dev, "Failed to detach from DSI host: %d\n", ret);
 
 	drm_panel_remove(&ctx->panel);
-
-	return 0;
 }
 
 static const struct of_device_id nt35521s_ebbg_of_match[] = {
