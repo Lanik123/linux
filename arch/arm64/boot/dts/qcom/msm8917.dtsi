@@ -905,17 +905,10 @@
 			qcom,iommu-secure-id = <18>;
 
 			/* GFX3D_USER */
-			iommu-ctx@1000 {
-				compatible = "qcom,msm-iommu-v1-ns";
-				reg = <0x1000 0x1000>;
-				interrupts = <GIC_SPI 241 IRQ_TYPE_LEVEL_HIGH>;
-			};
-
-			/* GFX3D_PRIV */
-			iommu-ctx@2000 {
-				compatible = "qcom,msm-iommu-v1-ns";
-				reg = <0x2000 0x1000>;
-				interrupts = <GIC_SPI 242 IRQ_TYPE_LEVEL_HIGH>;
+			iommu-ctx@0000 {
+				compatible = "qcom,msm-iommu-v2-ns";
+				reg = <0x0000 0x1000>;
+				interrupts = <GIC_SPI 240 IRQ_TYPE_LEVEL_HIGH>;
 			};
 		};
 
@@ -1072,7 +1065,7 @@
 			power-domains = <&gcc OXILI_GX_GDSC>;
 			operating-points-v2 = <&gpu_opp_table>;
 			#cooling-cells = <2>;
-			iommus = <&gpu_iommu 1>, <&gpu_iommu 2>;
+			iommus = <&gpu_iommu 0>;
 
 			gpu_opp_table: opp-table {
 				compatible  ="operating-points-v2";
