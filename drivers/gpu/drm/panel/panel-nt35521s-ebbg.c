@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2021 FIXME
+// Copyright (c) 2023 FIXME
 // Generated with linux-mdss-dsi-panel-driver-generator from vendor device tree:
 //   Copyright (c) 2013, The Linux Foundation. All rights reserved. (FIXME)
 
@@ -7,6 +7,7 @@
 #include <linux/gpio/consumer.h>
 #include <linux/module.h>
 #include <linux/of.h>
+#include <linux/regulator/consumer.h>
 
 #include <drm/drm_mipi_dsi.h>
 #include <drm/drm_modes.h>
@@ -15,6 +16,7 @@
 struct nt35521s_ebbg {
 	struct drm_panel panel;
 	struct mipi_dsi_device *dsi;
+	struct regulator_bulk_data supplies[2];
 	struct gpio_desc *reset_gpio;
 	bool prepared;
 };
@@ -23,14 +25,6 @@ static inline struct nt35521s_ebbg *to_nt35521s_ebbg(struct drm_panel *panel)
 {
 	return container_of(panel, struct nt35521s_ebbg, panel);
 }
-
-#define dsi_generic_write_seq(dsi, seq...) do {				\
-		static const u8 d[] = { seq };				\
-		int ret;						\
-		ret = mipi_dsi_generic_write(dsi, d, ARRAY_SIZE(d));	\
-		if (ret < 0)						\
-			return ret;					\
-	} while (0)
 
 static void nt35521s_ebbg_reset(struct nt35521s_ebbg *ctx)
 {
@@ -50,29 +44,30 @@ static int nt35521s_ebbg_on(struct nt35521s_ebbg *ctx)
 
 	dsi->mode_flags |= MIPI_DSI_MODE_LPM;
 
-	dsi_generic_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x08, 0x00);
-	dsi_generic_write_seq(dsi, 0xb1, 0x6c);
-	dsi_generic_write_seq(dsi, 0x64, 0x07);
-	dsi_generic_write_seq(dsi, 0xcc, 0x40, 0x00);
-	dsi_generic_write_seq(dsi, 0xd1,
-			      0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01, 0x01,
-			      0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x02, 0x02);
-	dsi_generic_write_seq(dsi, 0xd7,
-			      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			      0x00, 0x00, 0x00, 0x00);
-	dsi_generic_write_seq(dsi, 0xd8,
-			      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			      0x00, 0x00, 0x00, 0x00);
-	dsi_generic_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x00, 0x00);
-	dsi_generic_write_seq(dsi, 0xff, 0xaa, 0x55, 0x25, 0x01);
-	dsi_generic_write_seq(dsi, 0x6f, 0x1a);
-	dsi_generic_write_seq(dsi, 0xf7, 0x05);
-	dsi_generic_write_seq(dsi, 0x6f, 0x16);
-	dsi_generic_write_seq(dsi, 0xf7, 0x10);
-	dsi_generic_write_seq(dsi, 0x6f, 0x10);
-	dsi_generic_write_seq(dsi, 0xf7, 0x1d);
-	dsi_generic_write_seq(dsi, 0xff, 0xaa, 0x55, 0x25, 0x00);
-	dsi_generic_write_seq(dsi, 0x35, 0x00);
+	mipi_dsi_generic_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x08, 0x00);
+	mipi_dsi_generic_write_seq(dsi, 0xb1, 0x6c);
+	mipi_dsi_generic_write_seq(dsi, 0x64, 0x07);
+	mipi_dsi_generic_write_seq(dsi, 0xcc, 0x40, 0x00);
+	mipi_dsi_generic_write_seq(dsi, 0xd1,
+				   0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x01,
+				   0x01, 0x01, 0x01, 0x01, 0x01, 0x02, 0x02,
+				   0x02, 0x02);
+	mipi_dsi_generic_write_seq(dsi, 0xd7,
+				   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				   0x00, 0x00, 0x00, 0x00, 0x00);
+	mipi_dsi_generic_write_seq(dsi, 0xd8,
+				   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				   0x00, 0x00, 0x00, 0x00, 0x00);
+	mipi_dsi_generic_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x00, 0x00);
+	mipi_dsi_generic_write_seq(dsi, 0xff, 0xaa, 0x55, 0x25, 0x01);
+	mipi_dsi_generic_write_seq(dsi, 0x6f, 0x1a);
+	mipi_dsi_generic_write_seq(dsi, 0xf7, 0x05);
+	mipi_dsi_generic_write_seq(dsi, 0x6f, 0x16);
+	mipi_dsi_generic_write_seq(dsi, 0xf7, 0x10);
+	mipi_dsi_generic_write_seq(dsi, 0x6f, 0x10);
+	mipi_dsi_generic_write_seq(dsi, 0xf7, 0x1d);
+	mipi_dsi_generic_write_seq(dsi, 0xff, 0xaa, 0x55, 0x25, 0x00);
+	mipi_dsi_generic_write_seq(dsi, 0x35, 0x00);
 
 	ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
 	if (ret < 0) {
@@ -125,12 +120,19 @@ static int nt35521s_ebbg_prepare(struct drm_panel *panel)
 	if (ctx->prepared)
 		return 0;
 
+	ret = regulator_bulk_enable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
+	if (ret < 0) {
+		dev_err(dev, "Failed to enable regulators: %d\n", ret);
+		return ret;
+	}
+
 	nt35521s_ebbg_reset(ctx);
 
 	ret = nt35521s_ebbg_on(ctx);
 	if (ret < 0) {
 		dev_err(dev, "Failed to initialize panel: %d\n", ret);
 		gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+		regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
 		return ret;
 	}
 
@@ -152,6 +154,7 @@ static int nt35521s_ebbg_unprepare(struct drm_panel *panel)
 		dev_err(dev, "Failed to un-initialize panel: %d\n", ret);
 
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	regulator_bulk_disable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
 
 	ctx->prepared = false;
 	return 0;
@@ -206,6 +209,13 @@ static int nt35521s_ebbg_probe(struct mipi_dsi_device *dsi)
 	if (!ctx)
 		return -ENOMEM;
 
+	ctx->supplies[0].supply = "vsn";
+	ctx->supplies[1].supply = "vsp";
+	ret = devm_regulator_bulk_get(dev, ARRAY_SIZE(ctx->supplies),
+				      ctx->supplies);
+	if (ret < 0)
+		return dev_err_probe(dev, ret, "Failed to get regulators\n");
+
 	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->reset_gpio))
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
@@ -217,7 +227,8 @@ static int nt35521s_ebbg_probe(struct mipi_dsi_device *dsi)
 	dsi->lanes = 3;
 	dsi->format = MIPI_DSI_FMT_RGB888;
 	dsi->mode_flags = MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_HSE |
-			  MIPI_DSI_CLOCK_NON_CONTINUOUS;
+			  MIPI_DSI_CLOCK_NON_CONTINUOUS |
+			  MIPI_DSI_MODE_VIDEO_NO_HBP;
 
 	drm_panel_init(&ctx->panel, dev, &nt35521s_ebbg_panel_funcs,
 		       DRM_MODE_CONNECTOR_DSI);
@@ -269,4 +280,4 @@ module_mipi_dsi_driver(nt35521s_ebbg_driver);
 
 MODULE_AUTHOR("linux-mdss-dsi-panel-driver-generator <fix@me>"); // FIXME
 MODULE_DESCRIPTION("DRM driver for nt35521s_HD720p_video_EBBG_c3a");
-MODULE_LICENSE("GPL v2");
+MODULE_LICENSE("GPL");
