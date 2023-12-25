@@ -70,7 +70,7 @@
 			reg = <0x0 0x91400000 0x0 0x700000>;
 			no-map;
 		};
-		
+
 		mba_mem: mba_mem@92000000 {
 			reg = <0x0 0x92000000 0x0 0x100000>;
 			no-map;
@@ -272,7 +272,7 @@
 			clock-frequency = <32768>;
 		};
 	};
-    
+
 	firmware {
 		scm: scm {
 			compatible = "qcom,scm-msm8916", "qcom,scm";
@@ -1124,7 +1124,7 @@
 
 		sdhc_1: sdhci@7824900 {
 			compatible = "qcom,sdhci-msm-v4";
-			reg = <0x07824900 0x500>, <0x7824000 0x800>;
+			reg = <0x07824900 0x500>, <0x07824000 0x800>;
 			reg-names = "hc_mem", "core_mem";
 
 			interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
@@ -1144,7 +1144,7 @@
 
 		sdhc_2: sdhci@7864900 {
 			compatible = "qcom,sdhci-msm-v4";
-			reg = <0x07864900 0x500>, <0x7864000 0x800>;
+			reg = <0x07864900 0x500>, <0x07864000 0x800>;
 			reg-names = "hc_mem", "core_mem";
 
 			interrupts = <GIC_SPI 125 IRQ_TYPE_LEVEL_HIGH>,
