@@ -1,0 +1,63 @@
+// SPDX-License-Identifier: GPL-2.0-only
+#include "msm8937.dtsi"
+
+/ {
+	model = "Qualcomm Technologies, Inc. MSM8940";
+	compatible = "qcom,msm8940";
+	qcom,msm-id = <313 0x0>;
+};
+
+&gcc {
+	compatible = "qcom,gcc-msm8940";
+};
+
+&rpmcc {
+	compatible = "qcom,rpmcc-msm8940";
+};
+
+&gpu {
+	/delete-node/ gpu_opp_table;
+	gpu_opp_table: opp-table {
+		compatible  ="operating-points-v2";
+		opp-475000000 {
+			opp-hz = /bits/ 64 <475000000>;
+			opp-supported-hw = <0xFF>;
+		};
+		opp-450000000 {
+			opp-hz = /bits/ 64 <450000000>;
+			opp-supported-hw = <0xFF>;
+		};
+		opp-400000000 {
+			opp-hz = /bits/ 64 <400000000>;
+			opp-supported-hw = <0xFF>;
+		};
+		opp-375000000 {
+			opp-hz = /bits/ 64 <375000000>;
+			opp-supported-hw = <0xFF>;
+		};
+		opp-300000000 {
+			opp-hz = /bits/ 64 <300000000>;
+			opp-supported-hw = <0xFF>;
+		};
+		opp-216000000 {
+			opp-hz = /bits/ 64 <216000000>;
+			opp-supported-hw = <0xFF>;
+		};
+		opp-19200000 {
+			opp-hz = /bits/ 64 <19200000>;
+			opp-supported-hw = <0xFF>;
+		};
+	};
+};
+
+&mpss_mem {
+	reg = <0x0 0x86800000 0x0 0x6a00000>;
+};
+
+&adsp_fw_mem {
+	reg = <0x0 0x8d200000 0x0 0x1100000>;
+};
+
+&wcnss_fw_mem {
+	reg = <0x0 0x8e300000 0x0 0x700000>;
+};
