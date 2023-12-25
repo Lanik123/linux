@@ -45,6 +45,15 @@
 		operating-range-celsius = <0 45>;
 	};
 
+	backlight: backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pm8937_pwm 0 100000>;
+
+		brightness-levels = <0 255>;
+		num-interpolated-steps = <255>;
+		default-brightness-level = <255>;
+	};
+
 	gpio-keys {
 		compatible = "gpio-keys";
 
@@ -193,6 +202,7 @@
 
 		reset-gpios = <&msmgpio 60 GPIO_ACTIVE_LOW>;
 		
+		// backlight = <&backlight>;
 		pinctrl-names = "default", "sleep";
 		pinctrl-0 = <&mdss_dsi_active>;
 		pinctrl-1 = <&mdss_dsi_suspend>;
@@ -237,6 +247,12 @@
 	linux,code = <KEY_VOLUMEDOWN>;
 };
 
+&pm8937_pwm {
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwm_out>;
+};
+
 &pm8937_gpios {
 	pwm_out: gpio8 {
 		pins = "gpio8";
@@ -275,6 +291,14 @@
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
+	};
+
+	/delete-node/ gpio_key_default;
+	gpio_key_default: gpio-key-default-pins {
+		pins = "gpio91";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
 	};
 
 	reg_lcd_en_default: reg_lcd_en_default {
