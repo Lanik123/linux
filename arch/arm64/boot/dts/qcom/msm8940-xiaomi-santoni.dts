@@ -1,0 +1,362 @@
+/dts-v1/;
+
+#include "msm8940-pm8937.dtsi"
+#include "pmi8950.dtsi"
+#include <dt-bindings/leds/common.h>
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+	model = "Xiaomi Redmi 4X (santoni)";
+	compatible = "xiaomi,santoni", "qcom,msm8940";
+
+	qcom,msm-id = <313 0>;
+	qcom,board-id= <0x1000b 1>, <0x2000b 1>;
+	qcom,pmic-id = <0x10019 0x010011 0x0 0x0>;
+
+	aliases {
+		panel = &panel;
+		mmc0 = &sdhc_1; /* eMMC */
+		mmc1 = &sdhc_2; /* SD card */
+	};
+	
+	reserved-memory {
+		/delete-node/other_ext_region@85b00000;
+
+		other_ext_region@84A00000 {
+			no-map;
+			reg = <0x0 0x84A00000 0x0 0x1E00000>;
+		};
+
+		ramoops@b0000000 {
+			compatible = "ramoops";
+			reg = <0 0xb0000000 0 0x400000>;
+			record-size = <0x200000>;
+			console-size = <0x200000>;
+		};
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_key_default>;
+
+		label = "GPIO Button";
+
+		volume-up {
+			label = "Volume Up";
+			gpios = <&msmgpio 91 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_VOLUMEUP>;
+		};
+	};
+
+	battery: battery {
+		compatible = "simple-battery";
+		charge-full-design-microamp-hours = <4100000>;
+		voltage-min-design-microvolt = <3400000>;
+		voltage-max-design-microvolt = <4400000>;
+	};
+
+};
+
+&pmi8950_wled {
+	status = "okay";
+
+	/* Don't copy-paste! See pmi8950.dtsi */
+
+	qcom,current-limit-microamp = <20000>;
+	qcom,enabled-strings = <0 1>;
+	qcom,num-strings = <2>;
+	qcom,ovp-millivolt = <29600>;
+};
+
+&blsp_i2c2 {
+	status = "okay";
+	led-controller@45 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		compatible = "awinic,aw2013";
+
+		reg = <0x45>;
+
+		vcc-supply = <&pm8937_l10>;
+
+		led@0 {
+			reg = <0>;
+			led-max-microamp = <5000>;
+			function = LED_FUNCTION_INDICATOR;
+			color = <LED_COLOR_ID_RED>;
+		};
+		led@1 {
+			reg = <1>;
+			led-max-microamp = <5000>;
+			function = LED_FUNCTION_INDICATOR;
+			color = <LED_COLOR_ID_GREEN>;
+		};
+		led@2 {
+			reg = <2>;
+			led-max-microamp = <5000>;
+			function = LED_FUNCTION_INDICATOR;
+			color = <LED_COLOR_ID_BLUE>;
+		};
+	};
+};
+
+&blsp_i2c3 {
+	status = "okay";
+
+	touchscreen@38 {
+		compatible = "edt,edt-ft5306", "edt,edt-ft5x06";
+		reg = <0x38>;
+		vcc-supply = <&pm8937_l10>;
+		iovcc-supply = <&pm8937_l5>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&ts_int_active &ts_reset_active>;
+		interrupt-parent = <&msmgpio>;
+		interrupts = <65 0x2008>;
+		reset-gpios = <&msmgpio 64 GPIO_ACTIVE_LOW>;
+		touchscreen-size-x = <720>;
+		touchscreen-size-y = <1280>;
+	};
+};
+
+&blsp_i2c4 {
+	magnetometer@2e { // Magnetometer
+		compatible = "yamaha,yas537";
+		reg = <0x2e>;
+		vdd-supply = <&pm8937_l17>;
+		iovdd-supply = <&pm8937_l6>;
+		reset-gpios = <&msmgpio 12 GPIO_ACTIVE_LOW>;
+		interrupts = <&msmgpio 13 IRQ_TYPE_EDGE_RISING>;
+	};
+
+	stk3311@48 { // Ambient Light and Proximity Sensor
+		compatible = "sensortek,stk3311";
+		reg = <0x48>;
+		interrupt-parent = <&msmgpio>;
+		interrupts = <5 IRQ_TYPE_LEVEL_LOW>;
+	};
+
+	imu@68 { // Accelerometer + Gyroscope
+		compatible = "bosch,bmi160";
+		reg = <0x68>;
+
+		vdd-supply = <&pm8937_l17>;
+		vddio-supply = <&pm8937_l6>;
+
+		mount-matrix = "0", "1", "0",
+			"-1", "0", "0",
+			"0", "0", "1";
+	};
+
+	/* Need to implement ICM20607 Accelerometer + Gyroscope */
+};
+
+&dsi0 {
+	panel: panel@0 {
+		compatible = "wingtech,yassy-ili9881";
+		reg = <0>;
+
+		backlight = <&pmi8950_wled>;
+		
+		supply-names = "vsp", "vsn";
+		vsp-supply = <&lab_vreg>;
+		vsn-supply = <&ibb_vreg>;
+		
+		reset-gpios = <&msmgpio 60 GPIO_ACTIVE_LOW>;
+		
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&mdss_dsi_active &mdss_te_active>;
+		pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&dsi0_out>;
+			};
+		};
+	};
+};
+
+&dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&dsi_phy0 {
+	qcom,dsi-phy-regulator-ldo-mode;
+};
+
+&sdhc_1 {
+	status = "okay";
+
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&sdc1_clk_on &sdc1_cmd_on &sdc1_data_on &sdc1_rclk_on>;
+	pinctrl-1 = <&sdc1_clk_off &sdc1_cmd_off &sdc1_data_off &sdc1_rclk_off>;
+};
+
+&sdhc_2 {
+	status = "okay";
+
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&sdc2_clk_on &sdc2_cmd_on &sdc2_data_on &sdc2_cd_on>;
+	pinctrl-1 = <&sdc2_clk_off &sdc2_cmd_off &sdc2_data_off &sdc2_cd_off>;
+
+	cd-gpios = <&msmgpio 67 GPIO_ACTIVE_LOW>;
+};
+
+&pm8937_resin {
+	status = "okay";
+	linux,code = <KEY_VOLUMEDOWN>;
+};
+
+&msmgpio {
+	ts_reset_active: ts-reset-active-pins {
+		pins = "gpio64";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	ts_reset_suspend: ts-reset-suspend-pins {
+		pins = "gpio64";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+	ts_int_active: ts-int-active-pins {
+		pins = "gpio65";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	ts_int_suspend: ts-int-suspend-pins {
+		pins = "gpio65";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+	
+	mdss_dsi_active: mdss_dsi_active {
+		pins = "gpio60", "gpio98", "gpio99";
+		function = "gpio";
+		drive-strength = <8>; /* 8 mA */
+		bias-disable = <0>; /* no pull */
+		output-high;
+	};
+
+	mdss_dsi_suspend: mdss_dsi_suspend {
+		pins = "gpio60", "gpio98", "gpio99";
+		function = "gpio";
+		drive-strength = <2>; /* 2 mA */
+		bias-pull-down; /* pull down */
+		input-enable;
+	};
+	
+	mdss_te_active: mdss_te_active {
+		pins = "gpio24";
+		function = "mdp_vsync";
+		drive-strength = <2>; /* 8 mA */
+		bias-pull-down; /* pull down*/
+	};
+
+	mdss_te_suspend: mdss_te_suspend {
+		pins = "gpio24";
+		function = "mdp_vsync";
+		drive-strength = <2>; /* 2 mA */
+		bias-pull-down; /* pull down */
+	};
+};
+
+&sdc2_cmd_on {
+	drive-strength = <12>;
+};
+
+&sdc2_data_on {
+	drive-strength = <12>;
+};
+
+&smd_rpm_regulators {
+	s1 {
+		regulator-min-microvolt = <1000000>;
+		regulator-max-microvolt = <1225000>;
+	};
+	s3 {
+		regulator-min-microvolt = <1300000>;
+		regulator-max-microvolt = <1300000>;
+	};
+	s4 {
+		regulator-min-microvolt = <2050000>;
+		regulator-max-microvolt = <2050000>;
+	};
+	l2 {
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+	};
+	l5 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+	};
+	l6 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		regulator-always-on;
+	};
+	l7 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+	};
+	l8 {
+		regulator-min-microvolt = <2850000>;
+		regulator-max-microvolt = <2900000>;
+	};
+	l9 {
+		regulator-min-microvolt = <3000000>;
+		regulator-max-microvolt = <3300000>;
+	};
+	l10 {
+		regulator-min-microvolt = <2800000>;
+		regulator-max-microvolt = <3000000>;
+	};
+	l11 {
+		regulator-min-microvolt = <2950000>;
+		regulator-max-microvolt = <2950000>;
+	};
+	l12 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <2950000>;
+	};
+	l13 {
+		regulator-min-microvolt = <3075000>;
+		regulator-max-microvolt = <3075000>;
+	};
+	l14 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+	};
+	l15 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <3300000>;
+	};
+	l16 {
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+	};
+	l17 {
+		regulator-min-microvolt = <2800000>;
+		regulator-max-microvolt = <2900000>;
+	};
+	l19 {
+		regulator-min-microvolt = <1225000>;
+		regulator-max-microvolt = <1350000>;
+	};
+	l22 {
+		regulator-min-microvolt = <2800000>;
+		regulator-max-microvolt = <2800000>;
+	};
+	l23 {
+		regulator-min-microvolt = <1200000>;
+		regulator-max-microvolt = <1200000>;
+	};
+};
