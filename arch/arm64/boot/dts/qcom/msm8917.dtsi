@@ -905,7 +905,7 @@
 			qcom,iommu-secure-id = <18>;
 
 			/* GFX3D_USER */
-			iommu-ctx@0000 {
+			iommu-ctx@0 {
 				compatible = "qcom,msm-iommu-v2-ns";
 				reg = <0x0000 0x1000>;
 				interrupts = <GIC_SPI 240 IRQ_TYPE_LEVEL_HIGH>;
