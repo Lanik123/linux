@@ -155,7 +155,7 @@
 
 &dsi0 {
 	panel: panel@0 {
-		compatible = "wingtech,yassy-ili9881";
+		compatible = "mdss,ili9881c-ebbgdjn";
 		reg = <0>;
 
 		backlight = <&pmi8950_wled>;
