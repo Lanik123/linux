@@ -253,6 +253,10 @@
 	pinctrl-0 = <&pwm_out>;
 };
 
+&wcnss_iris {
+	compatible = "qcom,wcn3620";
+};
+
 &pm8937_gpios {
 	pwm_out: gpio8 {
 		pins = "gpio8";
