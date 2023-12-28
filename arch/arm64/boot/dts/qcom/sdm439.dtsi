@@ -1,0 +1,108 @@
+// SPDX-License-Identifier: GPL-2.0-only
+#include "msm8937.dtsi"
+
+/ {
+	model = "Qualcomm Technologies, Inc. SDM439";
+	compatible = "qcom,sdm439";
+	qcom,msm-id = <353 0x0>;
+};
+
+&gcc {
+	compatible = "qcom,gcc-sdm439";
+};
+
+&rpmcc {
+	compatible = "qcom,rpmcc-sdm429";
+};
+
+&rpm_requests {
+	/delete-node/ rpmpd;
+	rpmpd: power-controller {
+		compatible = "qcom,msm8953-rpmpd";
+		#power-domain-cells = <1>;
+		operating-points-v2 = <&rpmpd_opp_table>;
+		rpmpd_opp_table: opp-table {
+			compatible = "operating-points-v2";
+			rpmpd_opp_ret: opp1 {
+				opp-level = <RPM_SMD_LEVEL_RETENTION>;
+			};
+			rpmpd_opp_ret_plus: opp2 {
+				opp-level = <RPM_SMD_LEVEL_RETENTION_PLUS>;
+			};
+			rpmpd_opp_min_svs: opp3 {
+				opp-level = <RPM_SMD_LEVEL_MIN_SVS>;
+			};
+			rpmpd_opp_low_svs: opp4 {
+				opp-level = <RPM_SMD_LEVEL_LOW_SVS>;
+			};
+			rpmpd_opp_svs: opp5 {
+				opp-level = <RPM_SMD_LEVEL_SVS>;
+			};
+			rpmpd_opp_svs_plus: opp6 {
+				opp-level = <RPM_SMD_LEVEL_SVS_PLUS>;
+			};
+			rpmpd_opp_nom: opp7 {
+				opp-level = <RPM_SMD_LEVEL_NOM>;
+			};
+			rpmpd_opp_nom_plus: opp8 {
+				opp-level = <RPM_SMD_LEVEL_NOM_PLUS>;
+			};
+			rpmpd_opp_turbo: opp9 {
+				opp-level = <RPM_SMD_LEVEL_TURBO>;
+			};
+		};
+	};
+};
+
+/delete-node/ &adreno_smmu;
+&soc {
+	gpu_iommu: iommu@1c40000 {
+		compatible = "qcom,sdm439-gpu-iommu", "qcom,msm-iommu-v1";
+		clocks = <&gcc GCC_OXILI_AHB_CLK>,
+			 <&gcc GCC_BIMC_GFX_CLK>;
+		clock-names = "iface", "bus";
+
+		power-domains = <&gcc OXILI_CX_GDSC>;
+
+		qcom,iommu-secure-id = <18>;
+
+		ranges = <0 0x01c48000 0x8000>;
+
+		#address-cells = <1>;
+		#iommu-cells = <1>;
+		#size-cells = <1>;
+
+		iommu-ctx@0 { // gfx3d user
+			compatible = "qcom,msm-iommu-v2-ns";
+			reg = <0x0000 0x1000>;
+			interrupts = <GIC_SPI 225 IRQ_TYPE_LEVEL_HIGH>;
+		};
+
+		iommu-ctx@2000 { // gfx3d secure
+			compatible = "qcom,msm-iommu-v2-sec";
+			reg = <0x2000 0x1000>;
+			interrupts = <GIC_SPI 233 IRQ_TYPE_LEVEL_HIGH>;
+		};
+	};
+};
+
+&gpu {
+	status = "disabled";
+	iommus = <&gpu_iommu 0>;
+};
+
+&mdss {
+	status = "disabled";
+};
+
+&mpss_mem {
+	reg = <0x0 0x86800000 0x0 0x5500000>;
+};
+
+&adsp_fw_mem {
+	reg = <0x0 0x8bd00000 0x0 0x1100000>;
+};
+
+&wcnss_fw_mem {
+	reg = <0x0 0x8ce00000 0x0 0x700000>;
+};
