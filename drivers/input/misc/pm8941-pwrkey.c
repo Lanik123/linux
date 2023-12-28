@@ -180,6 +180,10 @@ static irqreturn_t pm8941_pwrkey_irq(int irq, void *_data)
 	}
 	pwrkey->last_status = sts;
 
+#ifdef CONFIG_INPUT_PANIC_ON_PWRKPD
+	panic("A panic has been triggered");
+#endif
+
 	input_report_key(pwrkey->input, pwrkey->code, sts);
 	input_sync(pwrkey->input);
 
