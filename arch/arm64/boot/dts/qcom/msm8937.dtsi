@@ -330,8 +330,6 @@
 		opp-921600000 { opp-hz = /bits/ 64 <921600000>; };
 		opp-998400000 { opp-hz = /bits/ 64 <998400000>; };
 		opp-1094400000 { opp-hz = /bits/ 64 <1094400000>; };
-		opp-1171200000 { opp-hz = /bits/ 64 <1171200000>; };
-		opp-1209600000 { opp-hz = /bits/ 64 <1209600000>; };
 	};
 
 	a53pllc1_opp_table: a53pllc1-opp-table {
@@ -358,7 +356,6 @@
 		opp-1420800000 { opp-hz = /bits/ 64 <1420800000>; };
 		opp-1440000000 { opp-hz = /bits/ 64 <1440000000>; };
 		opp-1459200000 { opp-hz = /bits/ 64 <1459200000>; };
-		opp-1497600000 { opp-hz = /bits/ 64 <1497600000>; };
 	};
 
 	a53pllcci_opp_table: a53pllcci-opp-table {
@@ -406,6 +403,9 @@
 		};
 		opp-1401000000 {
 			opp-hz = /bits/ 64 <1401000000>;
+		};
+		opp-1459200000 {
+			opp-hz = /bits/ 64 <1459200000>;
 		};
 	};
 
@@ -1022,7 +1022,7 @@
 
 		a53pll_c1: clock-controller@b016000 {
 			compatible = "qcom,msm8939-a53pll";
-			reg = <0x0b016000 0x34>;
+			reg = <0x0b016000 0x40>;
 			#clock-cells = <0>;
 			clocks = <&xo_board>;
 			clock-names = "xo";
@@ -1033,15 +1033,15 @@
 			compatible = "qcom,msm8937-apcs-kpss-global", "syscon";
 			reg = <0x0b011000 0x1000>;
 			#mbox-cells = <1>;
-			clocks = <&a53pll_c1>, <&gcc GPLL0_EARLY>;
-			clock-names = "pll", "aux";
+			clocks = <&a53pll_c1>, <&gcc GPLL0_EARLY>, <&xo_board>;
+			clock-names = "pll", "aux", "ref";
 			#clock-cells = <0>;
 			clock-output-names = "a53mux_c1";
 		};
 
 		a53pll_c0: clock-controller@b116000 {
 			compatible = "qcom,msm8939-a53pll";
-			reg = <0x0b116000 0x34>;
+			reg = <0x0b116000 0x40>;
 			#clock-cells = <0>;
 			clocks = <&xo_board>;
 			clock-names = "xo";
@@ -1052,8 +1052,8 @@
 			compatible = "qcom,msm8937-apcs-kpss-global", "syscon";
 			reg = <0x0b111000 0x1000>;
 			#mbox-cells = <1>;
-			clocks = <&a53pll_c0>, <&gcc GPLL0_EARLY>;
-			clock-names = "pll", "aux";
+			clocks = <&a53pll_c0>, <&gcc GPLL0_EARLY>, <&xo_board>;
+			clock-names = "pll", "aux", "ref";
 			#clock-cells = <0>;
 			clock-output-names = "a53mux_c0";
 		};
