@@ -122,48 +122,10 @@
 	};
 };
 
-&blsp_i2c4 {
-	magnetometer@2e { // Magnetometer
-		compatible = "yamaha,yas537";
-		reg = <0x2e>;
-		vdd-supply = <&pm8937_l17>;
-		iovdd-supply = <&pm8937_l6>;
-		reset-gpios = <&msmgpio 12 GPIO_ACTIVE_LOW>;
-		interrupts = <&msmgpio 13 IRQ_TYPE_EDGE_RISING>;
-	};
-
-	stk3311@48 { // Ambient Light and Proximity Sensor
-		compatible = "sensortek,stk3311";
-		reg = <0x48>;
-		interrupt-parent = <&msmgpio>;
-		interrupts = <5 IRQ_TYPE_LEVEL_LOW>;
-	};
-
-	imu@68 { // Accelerometer + Gyroscope
-		compatible = "bosch,bmi160";
-		reg = <0x68>;
-
-		vdd-supply = <&pm8937_l17>;
-		vddio-supply = <&pm8937_l6>;
-
-		mount-matrix = "0", "1", "0",
-			"-1", "0", "0",
-			"0", "0", "1";
-	};
-
-	/* Need to implement ICM20607 Accelerometer + Gyroscope */
-};
-
 &dsi0 {
 	panel: panel@0 {
 		compatible = "mdss,ili9881c-ebbgdjn";
 		reg = <0>;
-
-		backlight = <&pmi8950_wled>;
-		
-		supply-names = "vsp", "vsn";
-		vsp-supply = <&lab_vreg>;
-		vsn-supply = <&ibb_vreg>;
 		
 		reset-gpios = <&msmgpio 60 GPIO_ACTIVE_LOW>;
 		
