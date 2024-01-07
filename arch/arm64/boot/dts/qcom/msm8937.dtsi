@@ -1539,6 +1539,59 @@
 			status = "disabled";
 		};
 
+		modem: remoteproc@4080000 {
+			compatible = "qcom,mdm9607-mss-pil";
+			reg = <0x4080000 0x100>,
+			      <0x4020000 0x040>;
+
+			reg-names = "qdsp6", "rmb";
+
+			interrupts-extended = <&intc 0 24 1>,
+					      <&smp2p_modem_in 0 0>,
+					      <&smp2p_modem_in 1 0>,
+					      <&smp2p_modem_in 2 0>,
+					      <&smp2p_modem_in 3 0>;
+			interrupt-names = "wdog", "fatal", "ready",
+					  "handover", "stop-ack";
+
+			clocks = <&gcc GCC_MSS_CFG_AHB_CLK>,
+				 <&gcc GCC_MSS_Q6_BIMC_AXI_CLK>,
+				 <&gcc GCC_BOOT_ROM_AHB_CLK>,
+				 <&xo_board>;
+			clock-names = "iface", "bus", "mem", "xo";
+
+			power-domains = <&rpmpd MSM8937_VDDCX>, <&rpmpd MSM8937_VDDMX>;
+			power-domain-names = "cx", "mx";
+
+			qcom,smem-states = <&smp2p_modem_out 0>;
+			qcom,smem-state-names = "stop";
+
+			resets = <&scm 0>;
+			reset-names = "mss_restart";
+
+			qcom,halt-regs = <&tcsr 0x18000 0x19000 0x1a000>;
+
+			status = "okay";
+
+			mba {
+				memory-region = <&mba_mem>;
+			};
+
+			mpss {
+				memory-region = <&mpss_mem>;
+			};
+
+			smd-edge {
+				interrupts = <GIC_SPI 25 IRQ_TYPE_EDGE_RISING>;
+
+				qcom,smd-edge = <0>;
+				qcom,ipc = <&apcs_c1 8 12>;
+				qcom,remote-pid = <1>;
+
+				label = "modem";
+			};
+		};
+
 		pronto: remoteproc@a204000 {
 			compatible = "qcom,pronto-v3-pil", "qcom,pronto";
 			reg = <0x0a204000 0x2000>, <0x0a202000 0x1000>, <0x0a21b000 0x3000>;
