@@ -240,6 +240,10 @@
 	drive-strength = <12>;
 };
 
+&wcnss_iris {
+	compatible = "qcom,wcn3660b";
+};
+
 &smd_rpm_regulators {
 	s1 {
 		regulator-min-microvolt = <1000000>;
