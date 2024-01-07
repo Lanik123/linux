@@ -61,3 +61,7 @@
 &wcnss_fw_mem {
 	reg = <0x0 0x8e300000 0x0 0x700000>;
 };
+
+&modem {
+	status = "disabled";
+};
