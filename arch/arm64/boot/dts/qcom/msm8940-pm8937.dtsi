@@ -22,6 +22,17 @@
 	vqmmc-supply = <&pm8937_l12>;
 };
 
+&pronto {
+	vddpx-supply = <&pm8937_l5>;
+};
+
+&wcnss_iris {
+	vddxo-supply = <&pm8937_l7>;
+	vddrfa-supply = <&pm8937_l19>;
+	vddpa-supply = <&pm8937_l9>;
+	vdddig-supply = <&pm8937_l5>;
+};
+
 &rpm_requests {
 	smd_rpm_regulators: pm8937-regulators {
 		compatible = "qcom,rpm-pm8937-regulators";
