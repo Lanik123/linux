@@ -130,6 +130,14 @@
 	iommus = <&apps_iommu 0x15>;
 };
 
+&a53pll_c1 {
+	compatible = "qcom,sdm439-c1-a53hfpll";
+};
+
+&a53pll_c0 {
+	compatible = "qcom,sdm439-c0-a53hfpll";
+};
+
 &dsi_phy0 {
 	compatible = "qcom,dsi-phy-12nm";
 	reg = <0x01a94400 0x300>,
