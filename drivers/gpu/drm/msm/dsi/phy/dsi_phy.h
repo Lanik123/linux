@@ -26,6 +26,7 @@ struct msm_dsi_phy_ops {
 	int (*restore_pll_state)(struct msm_dsi_phy *phy);
 	bool (*set_continuous_clock)(struct msm_dsi_phy *phy, bool enable);
 	int (*parse_dt_properties)(struct msm_dsi_phy *phy);
+	void (*hstx_drv_ctrl)(struct msm_dsi_phy *phy, bool enable);
 };
 
 struct msm_dsi_phy_cfg {
@@ -55,6 +56,7 @@ extern const struct msm_dsi_phy_cfg dsi_phy_14nm_cfgs;
 extern const struct msm_dsi_phy_cfg dsi_phy_14nm_660_cfgs;
 extern const struct msm_dsi_phy_cfg dsi_phy_14nm_2290_cfgs;
 extern const struct msm_dsi_phy_cfg dsi_phy_14nm_8953_cfgs;
+extern const struct msm_dsi_phy_cfg dsi_phy_12nm_cfgs;
 extern const struct msm_dsi_phy_cfg dsi_phy_10nm_cfgs;
 extern const struct msm_dsi_phy_cfg dsi_phy_10nm_8998_cfgs;
 extern const struct msm_dsi_phy_cfg dsi_phy_7nm_cfgs;
@@ -86,6 +88,11 @@ struct msm_dsi_dphy_timing {
 	u32 hs_prep_dly_ckln;
 	u8 hs_halfbyte_en;
 	u8 hs_halfbyte_en_ckln;
+
+	/* For PHY v1.2 only */
+	u32 clk_rqst;
+	u32 clk_post;
+
 };
 
 #define DSI_BYTE_PLL_CLK		0
@@ -130,6 +137,8 @@ struct msm_dsi_phy {
  */
 int msm_dsi_dphy_timing_calc(struct msm_dsi_dphy_timing *timing,
 			     struct msm_dsi_phy_clk_request *clk_req);
+int msm_dsi_dphy_timing_calc_v1_2(struct msm_dsi_dphy_timing *timing,
+				struct msm_dsi_phy_clk_request *clk_req);
 int msm_dsi_dphy_timing_calc_v2(struct msm_dsi_dphy_timing *timing,
 				struct msm_dsi_phy_clk_request *clk_req);
 int msm_dsi_dphy_timing_calc_v3(struct msm_dsi_dphy_timing *timing,
