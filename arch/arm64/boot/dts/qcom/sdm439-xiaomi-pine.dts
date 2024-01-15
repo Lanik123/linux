@@ -1,5 +1,6 @@
 /dts-v1/;
 #include "sdm439-pm8953.dtsi"
+#include <dt-bindings/gpio/gpio.h>
 
 / {
 	model = "Xiaomi Redmi 7A";
@@ -22,6 +23,30 @@
 			pmsg-size = <0x200000>;
 		};
 	};
+};
+
+&dsi0 {
+	panel: panel@0 {
+		compatible = "mdss,ili9881cplus-c3e";
+		reg = <0>;
+
+		reset-gpios = <&msmgpio 60 GPIO_ACTIVE_LOW>;
+
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&mdss_dsi_active &mdss_te_active>;
+		pinctrl-1 = <&mdss_dsi_suspend &mdss_te_suspend>;
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&dsi0_out>;
+			};
+		};
+	};
+};
+
+&dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
 };
 
 &adsp_fw_mem {
