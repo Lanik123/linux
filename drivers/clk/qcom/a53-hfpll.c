@@ -11,6 +11,17 @@
 #include "clk-hfpll.h"
 #include "clk-regmap.h"
 
+static struct hfpll_data hdata = {
+	.mode_reg = 0x00,
+	.l_reg = 0x04,
+	.m_reg = 0x08,
+	.n_reg = 0x0c,
+	.user_reg = 0x10,
+	.config_reg = 0x14,
+	.status_reg = 0x1c,
+	.lock_bit = 16,
+};
+
 static const struct regmap_config a53hfpll_regmap_config = {
 	.reg_bits		= 32,
 	.reg_stride		= 4,
@@ -28,12 +39,12 @@ static const struct hfpll_clk_of_match_data msm8937_c0_data = {
 	.config_val = 0x4c015765, .user_val = 0x0100000f,
 };
 
-static const struct hfpll_clk_of_match_data msm8937_c1_data = {
-	.config_val = 0, .user_val = 0x0100000f,
-};
-
 static const struct hfpll_clk_of_match_data sdm439_c0_data = {
 	.config_val = 0x44024665, .user_val = 0x0100000f,
+};
+
+static const struct hfpll_clk_of_match_data msm8937_c1_data = {
+	.config_val = 0, .user_val = 0x0100000f,
 };
 
 static int qcom_a53hfpll_probe(struct platform_device *pdev)
@@ -41,9 +52,8 @@ static int qcom_a53hfpll_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	struct device_node *np = dev->of_node;
 	const struct hfpll_clk_of_match_data *match_data;
-	struct regmap *regmap;
-	struct hfpll_data hdata;
 	struct clk_hfpll *hfpll;
+	struct regmap *regmap;
 	void __iomem *base;
 	struct clk_init_data init = { };
 	u32 min_rate, max_rate;
@@ -61,23 +71,14 @@ static int qcom_a53hfpll_probe(struct platform_device *pdev)
 	if (IS_ERR(regmap))
 		return PTR_ERR(regmap);
 
-	hdata.mode_reg = 0x00;
-	hdata.l_reg = 0x04;
-	hdata.m_reg = 0x08;
-	hdata.n_reg = 0x0c;
-	hdata.user_reg = 0x10;
-	hdata.config_reg = 0x14;
-	hdata.status_reg = 0x1c;
-	hdata.lock_bit = 16;
-
 	if (of_property_read_u32(np, "clock-output-rate-min", &min_rate))
 		return -ENODEV;
 
 	if (of_property_read_u32(np, "clock-output-rate-max", &max_rate))
 		return -ENODEV;
 
-	hdata.min_rate = (unsigned long) min_rate;
-	hdata.max_rate = (unsigned long) max_rate;
+	hdata.min_rate = min_rate;
+	hdata.max_rate = max_rate;
 
 	match_data = of_device_get_match_data(dev);
 	if (match_data) {
