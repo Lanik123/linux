@@ -201,26 +201,6 @@
 		};
 	};
 
-	a53pll_opp_table: a53pll-opp-table {
-		compatible = "operating-points-v2";
-		opp-729600000 { opp-hz = /bits/ 64 <729600000>; };
-		opp-806400000 { opp-hz = /bits/ 64 <806400000>; };
-		opp-844800000 { opp-hz = /bits/ 64 <844800000>; };
-		opp-883200000 { opp-hz = /bits/ 64 <883200000>; };
-		opp-960000000 { opp-hz = /bits/ 64 <960000000>; };
-		opp-998400000 { opp-hz = /bits/ 64 <998400000>; };
-		opp-1036800000 { opp-hz = /bits/ 64 <1036800000>; };
-		opp-1094400000 { opp-hz = /bits/ 64 <1094400000>; };
-		opp-1113600000 { opp-hz = /bits/ 64 <1113600000>; };
-		opp-1190400000 { opp-hz = /bits/ 64 <1190400000>; };
-		opp-1209600000 { opp-hz = /bits/ 64 <1209600000>; };
-		opp-1267200000 { opp-hz = /bits/ 64 <1267200000>; };
-		opp-1305600000 { opp-hz = /bits/ 64 <1305600000>; };
-		opp-1344000000 { opp-hz = /bits/ 64 <1344000000>; };
-		opp-1401000000 { opp-hz = /bits/ 64 <1401000000>; };
-		opp-1459200000 { opp-hz = /bits/ 64 <1459200000>; };
-	};
-
 	cluster0_opp_table: cluster0-opp-table {
 		compatible = "operating-points-v2";
 		opp-shared;
@@ -914,12 +894,13 @@
 		};
 
 		a53pll: clock-controller@b016000 {
-			compatible = "qcom,msm8916-a53pll";
+			compatible = "qcom,msm8937-c1-a53hfpll";
 			reg = <0x0b016000 0x34>;
 			#clock-cells = <0>;
 			clocks = <&xo_board>;
 			clock-names = "xo";
-			operating-points-v2 = <&a53pll_opp_table>;
+			clock-output-rate-min = <729600000>;
+			clock-output-rate-max = <1459200000>;
 		};
 
 		apcs: mailbox@b011000 {
