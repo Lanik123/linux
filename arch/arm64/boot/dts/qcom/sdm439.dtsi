@@ -134,6 +134,14 @@
 	iommus = <&apps_iommu 0x15>;
 };
 
+&a53pll_c1 {
+	compatible = "qcom,sdm439-c1-a53hfpll";
+};
+
+&a53pll_c0 {
+	compatible = "qcom,sdm439-c0-a53hfpll";
+};
+
 &mpss_mem {
 	reg = <0x0 0x86800000 0x0 0x5500000>;
 };
