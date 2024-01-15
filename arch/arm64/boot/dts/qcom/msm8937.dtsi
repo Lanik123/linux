@@ -944,7 +944,7 @@
 			#clock-cells = <0>;
 			clocks = <&xo_board>;
 			clock-names = "xo";
-			clock-output-rate-min = <249600000>;
+			clock-output-rate-min = <768000000>;
 			clock-output-rate-max = <1094400000>;
 		};
 

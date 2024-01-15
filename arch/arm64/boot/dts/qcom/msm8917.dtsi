@@ -895,7 +895,7 @@
 
 		a53pll: clock-controller@b016000 {
 			compatible = "qcom,msm8937-c1-a53hfpll";
-			reg = <0x0b016000 0x34>;
+			reg = <0x0b016000 0x40>;
 			#clock-cells = <0>;
 			clocks = <&xo_board>;
 			clock-names = "xo";
@@ -907,8 +907,8 @@
 			compatible = "qcom,msm8917-apcs-kpss-global", "syscon";
 			reg = <0x0b011000 0x1000>;
 			#mbox-cells = <1>;
-			clocks = <&a53pll>, <&gcc GPLL0_EARLY>;
-			clock-names = "pll", "aux";
+			clocks = <&a53pll>, <&gcc GPLL0_EARLY>, <&xo_board>;
+			clock-names = "pll", "aux", "ref";
 			#clock-cells = <0>;
 		};
 
