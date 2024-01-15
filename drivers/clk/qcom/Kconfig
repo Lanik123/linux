@@ -28,6 +28,14 @@ config QCOM_A53PLL
 	  Say Y if you want to support higher CPU frequencies on MSM8916
 	  devices.
 
+config QCOM_A53HFPLL
+	tristate "MSM8937 A53 PLL"
+	help
+	  Support for the A53 PLL on MSM8937 devices. It provides
+	  the CPU with frequencies above 1GHz.
+	  Say Y if you want to support higher CPU frequencies on MSM8937
+	  devices.
+
 config QCOM_A7PLL
 	tristate "A7 PLL driver for SDX55 and SDX65"
 	help
