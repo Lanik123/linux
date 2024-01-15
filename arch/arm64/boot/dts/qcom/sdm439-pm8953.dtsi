@@ -2,6 +2,16 @@
 #include "sdm439.dtsi"
 #include "pm8953.dtsi"
 
+&dsi0 {
+	vdd-supply = <&pm8953_l17>;
+	vdda-supply = <&pm8953_l23>;
+	vddio-supply = <&pm8953_l6>;
+};
+
+&dsi_phy0 {
+	vddio-supply = <&pm8953_l6>;
+};
+
 &sdhc_1 {
 	status = "disabled";
 };

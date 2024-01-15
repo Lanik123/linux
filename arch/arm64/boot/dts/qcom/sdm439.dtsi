@@ -126,12 +126,28 @@
 	iommus = <&gpu_iommu 0>;
 };
 
-&mdss {
-	status = "disabled";
-};
-
 &mdp {
 	iommus = <&apps_iommu 0x15>;
+};
+
+&dsi_phy0 {
+	compatible = "qcom,dsi-phy-12nm";
+	reg = <0x01a94400 0x300>,
+	      <0x01a94400 0x400>,
+	      <0x0193e000 0x30>;
+	reg-names = "dsi_pll",
+		    "dsi_phy",
+		    "dsi_phy_regulator";
+};
+
+&dsi_phy1 {
+	compatible = "qcom,dsi-phy-12nm";
+	reg = <0x1a96400 0x300>,
+	      <0x1a96400 0x400>,
+	      <0x0193e000 0x30>;
+	reg-names = "dsi_pll",
+		    "dsi_phy",
+		    "dsi_phy_regulator";
 };
 
 &mpss_mem {
