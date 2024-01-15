@@ -853,5 +853,14 @@ config DRM_PANEL_NOVATEK_NT35521S_EBBG
 	  Say Y here if you want to enable support for the Novatek
 	  NT35521S EBBG controller for 720x1280 LCD panels with MIPI/RGB/SPI
 	  system interfaces.
+
+config DRM_PANEL_ILITEK_ILI9881CPLUS_C3E
+	tristate "ILITEK ILI9881CPLUS C3E panel driver"
+	depends on OF
+	depends on DRM_MIPI_DSI
+	depends on BACKLIGHT_CLASS_DEVICE
+	help
+	  Say Y here if you want to enable support for the Novatek
+
 source "drivers/gpu/drm/panel/msm8916-generated/Kconfig"
 endmenu

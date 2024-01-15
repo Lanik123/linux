@@ -87,4 +87,5 @@ obj-$(CONFIG_DRM_PANEL_VISIONOX_R66451) += panel-visionox-r66451.o
 obj-$(CONFIG_DRM_PANEL_WIDECHIPS_WS2401) += panel-widechips-ws2401.o
 obj-$(CONFIG_DRM_PANEL_XINPENG_XPP055C272) += panel-xinpeng-xpp055c272.o
 obj-$(CONFIG_DRM_PANEL_NOVATEK_NT35521S_EBBG) += panel-nt35521s-ebbg.o
+obj-$(CONFIG_DRM_PANEL_ILITEK_ILI9881CPLUS_C3E) += panel-ili9881cplus-c3e.o
 obj-y += msm8916-generated/
