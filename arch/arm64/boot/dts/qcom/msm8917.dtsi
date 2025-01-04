@@ -41,6 +41,7 @@
 			device_type = "cpu";
 			next-level-cache = <&l2_0>;
 			enable-method = "psci";
+			capacity-dmips-mhz = <1024>;
 			clocks = <&apcs>;
 			operating-points-v2 = <&cpu_opp_table>;
 			#cooling-cells = <2>;
@@ -60,6 +61,7 @@
 			device_type = "cpu";
 			next-level-cache = <&l2_0>;
 			enable-method = "psci";
+			capacity-dmips-mhz = <1024>;
 			clocks = <&apcs>;
 			operating-points-v2 = <&cpu_opp_table>;
 			#cooling-cells = <2>;
@@ -73,6 +75,7 @@
 			device_type = "cpu";
 			next-level-cache = <&l2_0>;
 			enable-method = "psci";
+			capacity-dmips-mhz = <1024>;
 			clocks = <&apcs>;
 			operating-points-v2 = <&cpu_opp_table>;
 			#cooling-cells = <2>;
@@ -86,6 +89,7 @@
 			device_type = "cpu";
 			next-level-cache = <&l2_0>;
 			enable-method = "psci";
+			capacity-dmips-mhz = <1024>;
 			clocks = <&apcs>;
 			operating-points-v2 = <&cpu_opp_table>;
 			#cooling-cells = <2>;
