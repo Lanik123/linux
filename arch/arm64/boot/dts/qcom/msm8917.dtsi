@@ -9,6 +9,9 @@
 #include <dt-bindings/thermal/thermal.h>
 
 / {
+	model = "Qualcomm Technologies, Inc. MSM8917";
+	compatible = "qcom,msm8917";
+	qcom,msm-id = <303 0x0>, <308 0x0>, <309 0x0>;
 	interrupt-parent = <&intc>;
 
 	#address-cells = <2>;
